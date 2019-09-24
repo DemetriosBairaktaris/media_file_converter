@@ -1,6 +1,7 @@
 import os
 from test import files
 
+
 def get_bare_extension(ext):
     ext = ext.split('.')[-1]
     return ext

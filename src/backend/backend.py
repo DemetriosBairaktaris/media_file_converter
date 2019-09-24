@@ -39,15 +39,19 @@ class Jobs:
     def __init__(self):
         self.jobs = []
         self.observers = []
+        self.stop_poll_for_jobs = False
         Thread(target=self._poll_for_jobs).start()
 
     def _poll_for_jobs(self):
-        while True:
+        while not self.stop_poll_for_jobs:
             for j in self.jobs:
                 if j.is_done():
                     for o in self.observers:
                         o.notify(j)
             sleep(5)
+
+    def stop_polling_for_jobs(self):
+        self.stop_poll_for_jobs = True
 
     def add_job(self, thread, name, src_path, dest_path):
         j = Job(thread, name, src_path, dest_path)

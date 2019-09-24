@@ -6,6 +6,20 @@ from test.files import file_utils
 from src.backend import backend
 
 
+class Contexts:
+
+    class JobsContext:
+        def __init__(self):
+            self.jobs = None
+
+        def __enter__(self):
+            self.jobs = backend.Jobs()
+            return backend.Jobs()
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.jobs.stop_polling_for_jobs()
+
+
 class Fixtures:
     seconds = 30
 
@@ -70,9 +84,9 @@ class TestJobs:
         :param job:
         :return:
         """
-        jobs = backend.Jobs()
-        jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-        assert jobs.jobs[0]
+        with Contexts.JobsContext() as jobs:
+            jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
+            assert jobs.jobs[0]
 
     def test_add_jobs(self, list_of_jobs):
         """
@@ -81,14 +95,13 @@ class TestJobs:
         :return:
         """
         Fixtures.seconds = 30
-        jobs = backend.Jobs()
+        with Contexts.JobsContext() as jobs:
+            for job in list_of_jobs:
+                jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
+                job.thread.start()
 
-        for job in list_of_jobs:
-            jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-            job.thread.start()
-
-        for job in jobs:
-            assert not job.is_done()
+            for job in jobs:
+                assert not job.is_done()
 
     def test_remove_job_by_id(self, job):
         """
@@ -96,35 +109,36 @@ class TestJobs:
         :param job:
         :return:
         """
-        jobs = backend.Jobs()
-        jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-        jobs.remove_job_by_id(hash(job.thread))
-        assert len(jobs.jobs) == 0
+        with Contexts.JobsContext() as jobs:
+            jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
+            jobs.remove_job_by_id(hash(job.thread))
+
+            assert len(jobs.jobs) == 0
 
     def test_add_observer_and_observe(self, job):
-        jobs = backend.Jobs()
-        Fixtures.seconds = 1
+        with Contexts.JobsContext() as jobs:
+            Fixtures.seconds = 1
 
-        class Observer:
-            def __init__(self):
-                self.notified = False
+            class Observer:
+                def __init__(self):
+                    self.notified = False
 
-            def notify(self, *args):
-                self.notified = True
-        o = Observer()
+                def notify(self, *args):
+                    self.notified = True
+            o = Observer()
 
-        jobs.observers.append(o)
-        jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-        job.thread.start()
-        sleep(6)
-        assert o.notified
+            jobs.observers.append(o)
+            jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
+            job.thread.start()
+            sleep(6)
+            assert o.notified
 
     def test_index_of_job_id(self, job):
         Fixtures.seconds  = 5
-        jobs = backend.Jobs()
-        jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-        job.thread.start()
-        assert 0 == jobs.index_of_id(job.id)
+        with Contexts.JobsContext() as jobs:
+            jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
+            job.thread.start()
+            assert 0 == jobs.index_of_id(job.id)
 
 
 class TestConversion:
@@ -132,13 +146,14 @@ class TestConversion:
     def test_same_dest_path_as_src_path(self):
         """
             Test that the conversion backend throws a FileExistsError if the conversion would yield same file type.
+            Should be agnostic to whether the extension has a . or not.
         :return:
         """
         with pytest.raises(FileExistsError):
             assert backend.Conversion().convert('/path/path/path.mp3', 'mp3')
             assert backend.Conversion().convert('/path/path/d.mp3', '.mp3')
 
-    def test_file_path(self):
+    def test_file_path_(self):
         with pytest.raises(FileExistsError):
             assert backend.Conversion().convert(file_utils.get_file_by_type('mp3'), 'wav')
 
