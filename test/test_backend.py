@@ -6,6 +6,10 @@ from test.files import file_utils
 from src.backend import backend
 
 
+def test_():
+    pass
+
+
 class Contexts:
 
     class JobsContext:
@@ -14,7 +18,7 @@ class Contexts:
 
         def __enter__(self):
             self.jobs = backend.Jobs()
-            return backend.Jobs()
+            return self.jobs
 
         def __exit__(self, exc_type, exc_val, exc_tb):
             self.jobs.stop_polling_for_jobs()
@@ -156,7 +160,3 @@ class TestConversion:
     def test_file_path_(self):
         with pytest.raises(FileExistsError):
             assert backend.Conversion().convert(file_utils.get_file_by_type('mp3'), 'wav')
-
-
-
-
