@@ -2,6 +2,7 @@ import pytest
 from threading import Thread
 from time import sleep
 
+from test.files import file_utils
 from src.backend import backend
 
 
@@ -125,6 +126,21 @@ class TestJobs:
         job.thread.start()
         assert 0 == jobs.index_of_id(job.id)
 
+
+class TestConversion:
+
+    def test_same_dest_path_as_src_path(self):
+        """
+            Test that the conversion backend throws a FileExistsError if the conversion would yield same file type.
+        :return:
+        """
+        with pytest.raises(FileExistsError):
+            assert backend.Conversion().convert('/path/path/path.mp3', 'mp3')
+            assert backend.Conversion().convert('/path/path/d.mp3', '.mp3')
+
+    def test_file_path(self):
+        with pytest.raises(FileExistsError):
+            assert backend.Conversion().convert(file_utils.get_file_by_type('mp3'), 'wav')
 
 
 
