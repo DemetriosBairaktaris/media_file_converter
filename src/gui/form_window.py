@@ -3,7 +3,7 @@ import os
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
                              QDialogButtonBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout,
                              QLabel, QLineEdit, QMenu, QMenuBar, QPushButton, QSpinBox, QTextEdit,
-                             QVBoxLayout, QFileDialog, QMessageBox, QListWidget, QStyleFactory, QStyle, QListWidgetItem)
+                             QVBoxLayout, QFileDialog, QMessageBox, QListWidget, QStyleFactory, QStyle, QListWidgetItem, QSystemTrayIcon)
 
 from src.backend.backend import Jobs
 from src.gui.widgets import ExtendedQListWidgetItem
@@ -38,22 +38,27 @@ class Dialog(QDialog):
     NumGridRows = 3
     NumButtons = 4
 
-    def __init__(self, conversion, test_mode=False, app=None):
+    def __init__(self, conversion, test_mode=False, app=None, icon=None):
         super(Dialog, self).__init__()
         if app:
             self.app = app
             #self.app.aboutToQuit.connect(self.closeEvent)
 
+        if icon:
+            self.sti = QSystemTrayIcon()
+            self.sti.setIcon(icon)
+            self.menu = QMenu()
+            self.sti.show()
+
         self.start_func = self.handle_start
         self.conversion = conversion
         self.source_button = QPushButton('Select Source')
         self.source_button.clicked.connect(self.openFileNameDialog)
+
         self.status_list = QListWidget()
         self.status_list.itemClicked.connect(self.item_clicked)
         self.status_list.setStyleSheet(
-            '''
-             
-             QListWidget::item { 
+        '''QListWidget::item { 
                   background-color:#efefef;
                   margin: 5px;
                   margin-bottom:0px; 
@@ -62,9 +67,7 @@ class Dialog(QDialog):
               },
               QListWidget::item:pressed {
                 background-color: #000000;
-             }
-              
-              ''')
+        }''')
 
         self.jobs = Jobs()
         self.jobs.observers.append(self)
@@ -84,7 +87,7 @@ class Dialog(QDialog):
         self.createFormGroupBox()
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.start_func or (lambda *args: 0))
-        buttonBox.rejected.connect(lambda *args: self.app.quit())
+        buttonBox.rejected.connect(self.reject)
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.formGroupBox)
@@ -158,8 +161,21 @@ class Dialog(QDialog):
                                                   "All Files (*);;Python Files (*.py)", options=options)
         self.set_selected_source(fileName)
 
+    def closeEvent(self, QCloseEvent):
+
+        self.jobs.stop_polling_for_jobs(wait=True)
+
+
+class ExtendedQApp(QApplication):
+
+    def exec(self, dialog):
+        dialog.exec()
+
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    dialog = Dialog(None, test_mode=True)
-    #sys.exit(dialog.exec_())
+    app = ExtendedQApp(sys.argv)
+    app.setQuitOnLastWindowClosed(True)
+    dialog = Dialog(None, app=app, test_mode=True)
+    app.exec(dialog)
+    app.instance().quit()
+    pass

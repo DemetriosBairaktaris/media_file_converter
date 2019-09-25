@@ -18,11 +18,7 @@ def start_app():
 def main():
     app = start_app()
     app.quitOnLastWindowClosed()
-
     app.exec()
-    app.activeWindow().close()
-
-
 
 
 if __name__ == '__main__':

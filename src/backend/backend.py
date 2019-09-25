@@ -40,7 +40,8 @@ class Jobs:
         self.jobs = []
         self.observers = []
         self.stop_poll_for_jobs = False
-        Thread(target=self._poll_for_jobs).start()
+        self.t = Thread(target=self._poll_for_jobs)
+        self.t.start()
 
     def _poll_for_jobs(self):
         while not self.stop_poll_for_jobs:
@@ -48,10 +49,12 @@ class Jobs:
                 if j.is_done():
                     for o in self.observers:
                         o.notify(j)
-            sleep(5)
+            sleep(.5)
 
-    def stop_polling_for_jobs(self):
+    def stop_polling_for_jobs(self, wait=False):
         self.stop_poll_for_jobs = True
+        while wait and self.t.is_alive():
+            sleep(.2)
 
     def add_job(self, thread, name, src_path, dest_path):
         j = Job(thread, name, src_path, dest_path)

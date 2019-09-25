@@ -12,5 +12,6 @@ pytest = "*"
 [packages]
 
 ffmpy = "*"
+ffmpeg-python = "*"
 "pyqt5" = "==5.9.2"
 
