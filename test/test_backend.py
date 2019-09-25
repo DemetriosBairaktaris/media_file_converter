@@ -1,6 +1,8 @@
 import pytest
 from threading import Thread
 from time import sleep
+from tempfile import NamedTemporaryFile
+import os
 
 from test.files import file_utils
 from src.backend import backend
@@ -11,7 +13,6 @@ def test_():
 
 
 class Contexts:
-
     class JobsContext:
         def __init__(self):
             self.jobs = None
@@ -52,6 +53,11 @@ list_of_jobs = Fixtures.list_of_jobs
 
 
 class TestJob:
+
+    def test_str_representation(self, job):
+        assert str(job) == 'name'
+        assert repr(job) == 'name'
+
     def test_create_job(self, job):
         """
         Create a job with thread and assert thread is running
@@ -81,6 +87,16 @@ class TestJob:
 
 
 class TestJobs:
+
+    def test_index(self, job):
+        with Contexts.JobsContext() as jobs:
+            jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
+            assert job == jobs[0]
+
+    def test_get_job_by_id(self, job):
+        with Contexts.JobsContext() as jobs:
+            jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
+            assert job == jobs.get_job(job.id)
 
     def test_add_job(self, job):
         """
@@ -129,6 +145,7 @@ class TestJobs:
 
                 def notify(self, *args):
                     self.notified = True
+
             o = Observer()
 
             jobs.observers.append(o)
@@ -138,7 +155,7 @@ class TestJobs:
             assert o.notified
 
     def test_index_of_job_id(self, job):
-        Fixtures.seconds  = 5
+        Fixtures.seconds = 5
         with Contexts.JobsContext() as jobs:
             jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
             job.thread.start()
@@ -146,6 +163,9 @@ class TestJobs:
 
 
 class TestConversion:
+
+    def test_run(self):
+        assert backend.Conversion().run(lambda: sleep(3)).is_alive()
 
     def test_same_dest_path_as_src_path(self):
         """
@@ -160,3 +180,16 @@ class TestConversion:
     def test_file_path_(self):
         with pytest.raises(FileExistsError):
             assert backend.Conversion().convert(file_utils.get_file_by_type('mp3'), 'wav')
+
+
+def test_remove_file():
+    t = NamedTemporaryFile('w', delete=False)
+    assert os.path.exists(t.name)
+    assert backend.remove_file(t.name)
+    assert not os.path.exists(t.name)
+
+
+def test_remove_file_not_exists():
+    """try to remove a file that does not exist, and it should not throw a exception"""
+    assert not os.path.exists('/c/d/e/r/f/d/d/e/3')
+    assert not backend.remove_file('/c/d/e/r/f/d/d/e/3')

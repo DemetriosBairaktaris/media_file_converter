@@ -87,7 +87,7 @@ class Dialog(QDialog):
         self.createFormGroupBox()
         buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttonBox.accepted.connect(self.start_func or (lambda *args: 0))
-        buttonBox.rejected.connect(self.reject)
+        buttonBox.rejected.connect(self.close)
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.formGroupBox)

@@ -7,8 +7,9 @@ from time import sleep
 def remove_file(path):
     try:
         os.remove(path)
+        return True
     except Exception as e:
-        pass
+        return False
 
 
 class Job:
@@ -34,6 +35,8 @@ class Job:
     def get_dest_path(self):
         return self.dest_path
 
+    def __eq__(self, other):
+        return self.id == other.id
 
 class Jobs:
     def __init__(self):
@@ -61,20 +64,10 @@ class Jobs:
         self.jobs.append(j)
         return j
 
-    def remove_job(self, thread):
-        for i in self.jobs[:]:
-            if i.thread is thread:
-                self.jobs.remove(i)
-
     def remove_job_by_id(self, id):
         for i in self.jobs[:]:
             if i.id == id:
                 self.jobs.remove(i)
-
-    def index_of(self, thread=None, name=None):
-        for i, j in enumerate(self.jobs):
-            if j.thread == thread:
-                return i
 
     def index_of_id(self, id):
         for i, j in enumerate(self.jobs):
