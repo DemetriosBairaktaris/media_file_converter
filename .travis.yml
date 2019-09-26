@@ -3,9 +3,17 @@ python:
   - "3.7"
   - "3.7-dev"
 
+os:
+  - linux
+  - osx
+  - windows
+
 # command to install dependencies
 before_install:
-  - sudo apt-get install ffmpeg
+  - if ["$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install ffmpeg fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install ffmpeg fi
+  - if [ "$TRAVIS_OS_NAME" = "windows" ]; then choco install ffmpeg fi
+
 install:
   - pip install -r requirements.txt
 # command to run tests
