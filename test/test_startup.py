@@ -4,14 +4,16 @@ from threading import Thread
 from time import sleep
 
 app = None
+running = None
 
 
 def kill():
     global app
+    global running
     while app is None:
-        pass
-    assert app.thread().isRunning()
-    app.closeAllWindows()
+        sleep(1)
+    running = app.thread().isRunning()
+    app.quit()
 
 
 def start_app():
@@ -20,9 +22,14 @@ def start_app():
     app.exec(dialog)
     pass
 
-@pytest.mark.skip()
+
+#@pytest.mark.skip()
 def test_startup():
     global app
+    global running
     """Test that the app can simply start"""
-    Thread(target=kill).start()
+    t = Thread(target=kill)
+    t.start()
     start_app()
+    t.join()
+    assert running is True

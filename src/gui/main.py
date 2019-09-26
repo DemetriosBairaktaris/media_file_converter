@@ -10,6 +10,7 @@ def start_dialog(app, conversion):
 
 def start_app():
     app = ExtendedQApp([]) #QApplication([])
+    app.setQuitOnLastWindowClosed(True)
     dialog = start_dialog(app, Conversion())
     return app, dialog
 

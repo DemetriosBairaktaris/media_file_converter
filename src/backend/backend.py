@@ -9,6 +9,8 @@ def remove_file(path):
         os.remove(path)
         return True
     except Exception as e:
+        e = "Couln't remove file, {}".format(str(e))
+        print(e)
         return False
 
 
