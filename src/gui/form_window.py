@@ -1,9 +1,9 @@
 import sys
 import os
 from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
-                             QDialogButtonBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout,
-                             QLabel, QLineEdit, QMenu, QMenuBar, QPushButton, QSpinBox, QTextEdit,
-                             QVBoxLayout, QFileDialog, QMessageBox, QListWidget, QStyleFactory, QStyle, QListWidgetItem, QSystemTrayIcon)
+                             QDialogButtonBox, QFormLayout, QGroupBox,
+                             QLabel, QMenu, QPushButton,
+                             QVBoxLayout, QFileDialog, QMessageBox, QListWidget, QSystemTrayIcon)
 
 from src.backend.backend import Jobs
 from src.gui.widgets import ExtendedQListWidgetItem
@@ -11,10 +11,12 @@ from src.gui.widgets import ExtendedQListWidgetItem
 
 def open_file_exporer(path):
     if sys.platform == 'darwin':
-        cmd = 'open'
-    else:
+        cmd = 'open -R'
+    elif sys.platform == 'win32':
         cmd = 'explorer.exe'
-
+    else:
+        # TODO
+        pass
     os.system('{} {}'.format(cmd, path))
 
 
@@ -42,7 +44,7 @@ class Dialog(QDialog):
         super(Dialog, self).__init__()
         if app:
             self.app = app
-            #self.app.aboutToQuit.connect(self.closeEvent)
+            # self.app.aboutToQuit.connect(self.closeEvent)
 
         if icon:
             self.sti = QSystemTrayIcon()
@@ -58,16 +60,16 @@ class Dialog(QDialog):
         self.status_list = QListWidget()
         self.status_list.itemClicked.connect(self.item_clicked)
         self.status_list.setStyleSheet(
-        '''QListWidget::item { 
-                  background-color:#efefef;
-                  margin: 5px;
-                  margin-bottom:0px; 
-                  padding: 3px;
-                  
-              },
-              QListWidget::item:pressed {
-                background-color: #000000;
-        }''')
+            '''QListWidget::item { 
+                      background-color:#efefef;
+                      margin: 5px;
+                      margin-bottom:0px; 
+                      padding: 3px;
+                      
+                  },
+                  QListWidget::item:pressed {
+                    background-color: #000000;
+            }''')
 
         self.jobs = Jobs()
         self.jobs.observers.append(self)
@@ -93,15 +95,11 @@ class Dialog(QDialog):
         mainLayout.addWidget(self.formGroupBox)
         mainLayout.addWidget(buttonBox)
         self.setLayout(mainLayout)
-
         self.setWindowTitle("FILE CONVERTER")
 
     def notify(self, job, *args, **kwargs):
-        id = job.id
-        index = self.jobs.index_of_id(id)
-        text = self.status_list.item(index).text()
-
-        self.status_list.item(index).setText(text + ' - Done')
+        index = self.jobs.index_of_id(job.id)
+        self.status_list.item(index).set_done(True)
 
     def handle_start(self, *args, **kwargs):
         selected_conversion_type = self.dest_type_picker.currentText()
@@ -167,7 +165,6 @@ class Dialog(QDialog):
 
 
 class ExtendedQApp(QApplication):
-
     def exec(self, dialog):
         dialog.exec()
         dialog.close()
@@ -178,6 +175,7 @@ if __name__ == '__main__':
     app = ExtendedQApp(sys.argv)
     app.setQuitOnLastWindowClosed(True)
     dialog = Dialog(None, app=app, test_mode=True)
+    dialog.showFullScreen()
     app.exec(dialog)
     app.instance().quit()
     pass

@@ -6,6 +6,7 @@ import os
 
 from test.files import file_utils
 from src.backend import backend
+from src.gui import widgets
 
 
 def test_():
@@ -206,3 +207,27 @@ def test_remove_file_not_exists():
     """try to remove a file that does not exist, and it should not throw a exception"""
     assert not os.path.exists('/c/d/e/r/f/d/d/e/3')
     assert not backend.remove_file('/c/d/e/r/f/d/d/e/3')
+
+
+def test_extended_widget_list_item():
+    """Tests how the widget list item's state should be"""
+    assert widgets.ExtendedQListWidgetItem('id').id == 'id'
+
+
+def test_extended_widget_list_item_original_text():
+    assert widgets.ExtendedQListWidgetItem('id', 'text').original_text == 'text'
+
+
+def test_extended_widget_list_item_original_text_changed():
+    e = widgets.ExtendedQListWidgetItem('id', 'text')
+    e.set_done(True)
+    assert e.text().lower().endswith('done')
+
+
+def test_extended_widget_list_item_original_text_changed_x_times():
+    e = widgets.ExtendedQListWidgetItem('id', 'text')
+    e.set_done(True)
+    e.set_done(True)
+    e.set_done(True)
+    assert e.text().lower().endswith('done')
+    assert e.text().lower().count('done') == 1
