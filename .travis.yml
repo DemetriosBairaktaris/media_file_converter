@@ -4,14 +4,26 @@ python:
 
 os:
   - linux
-  - osx
-  #- windows
+  #- osx
+  - windows
+
+
+matrix:
+  include:
+    - os: windows
+      language: sh
+      python: "3.7"
+      before_install:
+        - choco install python3
+        - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
+        - virtualenv $HOME/venv
+        - source $HOME/venv/Scripts/activate
 
 # command to install dependencies
 before_install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install ffmpeg ; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ffmpeg ; fi
-  #- if [ "$TRAVIS_OS_NAME" == "windows" ]; then choco install ffmpeg; fi
+  #- if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ffmpeg ; fi
+  - if [ "$TRAVIS_OS_NAME" == "windows" ]; then choco install ffmpeg; fi
 
 install:
   - pip install -r requirements.txt
