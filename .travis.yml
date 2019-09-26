@@ -17,6 +17,7 @@ matrix:
 
       before_install:
         - choco install python3
+        - pip install virtualenv
         #- export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
         - virtualenv $HOME/venv
         - source $HOME/venv/Scripts/activate
