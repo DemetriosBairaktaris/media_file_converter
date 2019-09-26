@@ -7,8 +7,9 @@ from time import sleep
 def remove_file(path):
     try:
         os.remove(path)
+        return True
     except Exception as e:
-        pass
+        return False
 
 
 class Job:
@@ -34,40 +35,39 @@ class Job:
     def get_dest_path(self):
         return self.dest_path
 
+    def __eq__(self, other):
+        return self.id == other.id
 
 class Jobs:
     def __init__(self):
         self.jobs = []
         self.observers = []
-        Thread(target=self._poll_for_jobs).start()
+        self.stop_poll_for_jobs = False
+        self.t = Thread(target=self._poll_for_jobs)
+        self.t.start()
 
     def _poll_for_jobs(self):
-        while True:
+        while not self.stop_poll_for_jobs:
             for j in self.jobs:
                 if j.is_done():
                     for o in self.observers:
                         o.notify(j)
-            sleep(5)
+            sleep(.5)
+
+    def stop_polling_for_jobs(self, wait=False):
+        self.stop_poll_for_jobs = True
+        while wait and self.t.is_alive():
+            sleep(.2)
 
     def add_job(self, thread, name, src_path, dest_path):
         j = Job(thread, name, src_path, dest_path)
         self.jobs.append(j)
         return j
 
-    def remove_job(self, thread):
-        for i in self.jobs[:]:
-            if i.thread is thread:
-                self.jobs.remove(i)
-
     def remove_job_by_id(self, id):
         for i in self.jobs[:]:
             if i.id == id:
                 self.jobs.remove(i)
-
-    def index_of(self, thread=None, name=None):
-        for i, j in enumerate(self.jobs):
-            if j.thread == thread:
-                return i
 
     def index_of_id(self, id):
         for i, j in enumerate(self.jobs):
