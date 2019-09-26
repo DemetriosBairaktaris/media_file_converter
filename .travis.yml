@@ -7,7 +7,6 @@ os:
   #- osx
   #- windows
 
-
 matrix:
   include:
     - os: windows
@@ -23,7 +22,7 @@ matrix:
         - source $HOME/venv/Scripts/activate
         - choco install ffmpeg
       install:
-        - pip install -r requirements.txt
+        - pip install -r requirements-test.txt
       script:
         - pytest --cov src/ test/ --verbose --cov-report term-missing
 

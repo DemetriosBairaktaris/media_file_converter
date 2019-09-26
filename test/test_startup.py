@@ -23,7 +23,7 @@ def start_app():
     pass
 
 
-#@pytest.mark.skip()
+@pytest.mark.skip()
 def test_startup():
     global app
     global running
