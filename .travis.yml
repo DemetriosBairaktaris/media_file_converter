@@ -5,6 +5,7 @@ python:
 
 # command to install dependencies
 install:
+  - apt install ffmpeg
   - pip install -r requirements.txt
 # command to run tests
 script:
