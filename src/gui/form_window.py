@@ -170,6 +170,7 @@ class ExtendedQApp(QApplication):
 
     def exec(self, dialog):
         dialog.exec()
+        pass
 
 
 if __name__ == '__main__':

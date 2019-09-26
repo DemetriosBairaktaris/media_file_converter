@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication
-from src.gui.form_window import Dialog
+from src.gui.form_window import Dialog, ExtendedQApp
 from src.backend.backend import Conversion
 import sys
 
@@ -9,16 +9,15 @@ def start_dialog(app, conversion):
 
 
 def start_app():
-    app = QApplication([])
+    app = ExtendedQApp([]) #QApplication([])
     dialog = start_dialog(app, Conversion())
-    dialog.show()
-    return app
+    return app, dialog
 
 
 def main():
-    app = start_app()
+    app, dialog = start_app()
+    app.exec(dialog)
     app.quitOnLastWindowClosed()
-    app.exec()
 
 
 if __name__ == '__main__':
