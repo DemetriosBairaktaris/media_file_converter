@@ -1,3 +1,4 @@
+
 language: python
 python:
   - "3.6"
@@ -11,24 +12,24 @@ os:
 
 matrix:
   include:
-    - os: windows
-      language: shell
-      python: "3.7"
-      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
-
-      before_install:
-        - choco install python3
-        - pip install virtualenv
-        - virtualenv $HOME/venv
-        - source $HOME/venv/Scripts/activate
-        - choco install ffmpeg
-        - export PATH=$PATH:";C:\ProgramData\chocolatey\lib\ffmpeg\tools"
-        - echo $PATH
-      install:
-        - pip install -r requirements-test.txt
-      script:
-        - pytest --cov src/ test/ --verbose --cov-report term-missing
-        #C:\ProgramData\chocolatey\lib\ffmpeg\tools
+#    - os: windows
+#      language: shell
+#      python: "3.7"
+#      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+#
+#      before_install:
+#        - choco install python3
+#        - pip install virtualenv
+#        - virtualenv $HOME/venv
+#        - source $HOME/venv/Scripts/activate
+#        - choco install ffmpeg
+#        - export PATH=$PATH:";C:\ProgramData\chocolatey\lib\ffmpeg\tools"
+#        - echo $PATH
+#      install:
+#        - pip install -r requirements-test.txt
+#      script:
+#        - pytest --cov src/ test/ --verbose --cov-report term-missing
+#        #C:\ProgramData\chocolatey\lib\ffmpeg\tools
     - os: linux
 
 # command to install dependencies
@@ -52,3 +53,6 @@ before_script:
 
 script:
   - pytest --cov src/ test/ --verbose --cov-report term-missing
+
+ after_success:
+    - codecov
