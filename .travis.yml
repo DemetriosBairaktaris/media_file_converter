@@ -33,5 +33,5 @@ before_script:
 script:
   - pytest --cov src/ test/ --verbose --cov-report term-missing
 
- after_success:
-    - codecov
+after_success:
+  - codecov
