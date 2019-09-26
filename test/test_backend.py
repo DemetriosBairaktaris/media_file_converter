@@ -196,6 +196,7 @@ class TestConversion:
 
 def test_remove_file():
     t = NamedTemporaryFile('w', delete=False)
+    t.close()
     assert os.path.exists(t.name)
     assert backend.remove_file(t.name)
     assert not os.path.exists(t.name)

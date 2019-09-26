@@ -19,7 +19,6 @@ matrix:
       before_install:
         - choco install python3
         - pip install virtualenv
-        #- export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
         - virtualenv $HOME/venv
         - source $HOME/venv/Scripts/activate
         - choco install ffmpeg
@@ -28,7 +27,6 @@ matrix:
       install:
         - pip install -r requirements-test.txt
       script:
-        - xvfb-run make test
         - pytest --cov src/ test/ --verbose --cov-report term-missing
         #C:\ProgramData\chocolatey\lib\ffmpeg\tools
     - os: linux
