@@ -109,7 +109,7 @@ class Dialog(QDialog):
 
         thread = None
         params = (selected_source, selected_conversion_type)
-        kwparams = {'app_window': self}
+        kwparams = {}
         convert = self.conversion.convert
         try:
             thread = convert(*params, **kwparams)
@@ -170,6 +170,7 @@ class ExtendedQApp(QApplication):
 
     def exec(self, dialog):
         dialog.exec()
+        pass
 
 
 if __name__ == '__main__':
