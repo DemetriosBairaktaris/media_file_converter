@@ -170,6 +170,7 @@ class ExtendedQApp(QApplication):
 
     def exec(self, dialog):
         dialog.exec()
+        dialog.close()
         pass
 
 
