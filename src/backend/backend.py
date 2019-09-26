@@ -38,6 +38,7 @@ class Job:
     def __eq__(self, other):
         return self.id == other.id
 
+
 class Jobs:
     def __init__(self):
         self.jobs = []
@@ -87,13 +88,12 @@ class Jobs:
 
 
 class Conversion:
-
     def run(self, runnable, *args):
         thread = Thread(target=runnable, args=args)
         thread.start()
         return thread
 
-    def convert(self, input_path, conversion_extension, check_file_path=True, app_window=None):
+    def convert(self, input_path, conversion_extension, check_file_path=True, do_multi_thread=True):
         output_path, ext = os.path.splitext(input_path)
         output_path += ('.' if '.' not in conversion_extension else '') + conversion_extension
         if check_file_path is True and os.path.exists(output_path):
@@ -107,7 +107,6 @@ class Conversion:
             inputs={input_path: None},
             outputs={output_path: None})
 
-        do_multi_thread = app_window is not None
         if do_multi_thread:
             return self.run(ff.run)
         else:

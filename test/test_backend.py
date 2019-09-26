@@ -181,6 +181,18 @@ class TestConversion:
         with pytest.raises(FileExistsError):
             assert backend.Conversion().convert(file_utils.get_file_by_type('mp3'), 'wav')
 
+    def test_convert_with_multi_thread(self):
+        c = backend.Conversion()
+        c.convert(file_utils.get_file_by_type('wav', prefix='real_'), 'mp3', check_file_path=False).join()
+        assert os.path.exists(file_utils.get_file_by_type('mp3', prefix='real_'))
+        os.remove(file_utils.get_file_by_type('mp3', prefix='real_'))
+
+    def test_convert_no_multi_thread(self):
+        c = backend.Conversion()
+        c.convert(file_utils.get_file_by_type('wav', prefix='real_'), 'mp3', check_file_path=False, do_multi_thread=False)
+        assert os.path.exists(file_utils.get_file_by_type('mp3', prefix='real_'))
+        os.remove(file_utils.get_file_by_type('mp3', prefix='real_'))
+
 
 def test_remove_file():
     t = NamedTemporaryFile('w', delete=False)

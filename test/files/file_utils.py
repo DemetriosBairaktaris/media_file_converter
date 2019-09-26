@@ -7,8 +7,8 @@ def get_bare_extension(ext):
     return ext
 
 
-def get_file_by_type(ext) -> str:
-    name = 'file.' + get_bare_extension(ext)
+def get_file_by_type(ext, prefix='') -> str:
+    name = prefix + 'file.' + get_bare_extension(ext)
     if os.path.exists(os.path.join(get_files_dir(), name)):
         return os.path.join(get_files_dir(), name)
 
