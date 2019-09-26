@@ -21,11 +21,13 @@ matrix:
         - virtualenv $HOME/venv
         - source $HOME/venv/Scripts/activate
         - choco install ffmpeg
+        - export PATH=$PATH:";C:\ProgramData\chocolatey\lib\ffmpeg\tools"
+        - echo $PATH
       install:
         - pip install -r requirements-test.txt
       script:
         - pytest --cov src/ test/ --verbose --cov-report term-missing
-
+        #C:\ProgramData\chocolatey\lib\ffmpeg\tools
     - os: linux
 
 # command to install dependencies
