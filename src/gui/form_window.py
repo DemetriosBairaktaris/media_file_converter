@@ -7,9 +7,11 @@ from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
 
 from src.backend.backend import Jobs
 from src.gui.widgets import ExtendedQListWidgetItem
+from src.gui import icons
 
 
 def open_file_exporer(path):
+
     if sys.platform == 'darwin':
         cmd = 'open -R'
     elif sys.platform == 'win32':
@@ -78,7 +80,7 @@ class Dialog(QDialog):
 
         if test_mode:
             for i in range(10):
-                self.status_list.addItem(ExtendedQListWidgetItem(123, 'Text'))
+                self.status_list.addItem(ExtendedQListWidgetItem(123, 'Text', icon=icons.load_icon(icons.IconNames.CHECK_MARK)))
         if not test_mode and conversion is None:
             raise Exception('Conversion backend not found')
 
