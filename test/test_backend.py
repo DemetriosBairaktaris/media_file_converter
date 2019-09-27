@@ -6,7 +6,7 @@ import os
 
 from test.files import file_utils
 from src.backend import backend
-from src.gui import widgets
+from src.gui import icons, widgets
 
 
 def test_():
@@ -34,7 +34,7 @@ class Fixtures:
         name = 'name'
         src = 'src'
         dest = 'dest'
-        t = Thread(target=lambda *args: [sleep(1) for x in range(Fixtures.seconds)])
+        t = backend.CustomThread(target=lambda *args: [sleep(1) for x in range(Fixtures.seconds)])
         return backend.Job(t, name, src, dest)
 
     @staticmethod
@@ -85,6 +85,16 @@ class TestJob:
         t = job.thread
         id = hash(t)
         assert id == job.id
+
+    def test_job_is_done_if_not_started(self, job):
+        """even though thread is not alive, job has not been started, so not done"""
+        Fixtures.seconds = 2
+        t = job.thread
+        assert not job.is_done()
+        t.start()
+        sleep(5)
+        assert job.is_done()
+
 
 
 class TestJobs:
@@ -231,3 +241,9 @@ def test_extended_widget_list_item_original_text_changed_x_times():
     e.set_done(True)
     assert e.text().lower().endswith('done')
     assert e.text().lower().count('done') == 1
+
+
+def test_extended_widget_list_item_set_icon():
+    e = widgets.ExtendedQListWidgetItem('id', 'text', icon=(icons.load_icon(icons.IconNames.CHECK_MARK)))
+    assert e.icon()
+

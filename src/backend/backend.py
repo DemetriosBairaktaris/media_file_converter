@@ -14,9 +14,20 @@ def remove_file(path):
         return False
 
 
+class CustomThread(Thread):
+
+    def __init__(self, *args, **kwargs):
+        super(CustomThread, self).__init__(*args, **kwargs)
+        self.started = False
+
+    def start(self):
+        self.started = True
+        super(CustomThread, self).start()
+
+
 class Job:
     def __init__(self, thread, name, src, dest):
-        self.thread = thread
+        self.thread: CustomThread = thread
         self.id = hash(self.thread)
         self.name = name
         self.dest_path = dest
@@ -29,7 +40,7 @@ class Job:
         return str(self)
 
     def is_done(self):
-        return not self.thread.is_alive()
+        return not self.thread.is_alive() and self.thread.started
 
     def get_src_path(self):
         return self.src_path
@@ -46,7 +57,7 @@ class Jobs:
         self.jobs = []
         self.observers = []
         self.stop_poll_for_jobs = False
-        self.t = Thread(target=self._poll_for_jobs)
+        self.t = CustomThread(target=self._poll_for_jobs)
         self.t.start()
 
     def _poll_for_jobs(self):
