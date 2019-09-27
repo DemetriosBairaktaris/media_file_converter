@@ -153,6 +153,8 @@ class Dialog(QDialog):
             open_file_exporer(self.jobs[self.jobs.index_of_id(item.id)].get_dest_path())
             self.status_list.takeItem(self.jobs.index_of_id(item.id))
             self.jobs.remove_job_by_id(item.id)
+        else:
+            print('Not done')
 
     def openFileNameDialog(self):
         options = QFileDialog.Options()
