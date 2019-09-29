@@ -35,9 +35,11 @@ matrix:
 
   - os: osx
     language: sh
+    osx_image: xcode10.2
+
     before_install:
-      - brew update
-      - brew install python3
+      #- brew update
+      #- brew install python3
       #- pyenv install 3.6.7
       #- pyenv local 3.6.7
       - brew install ffmpeg
