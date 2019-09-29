@@ -38,6 +38,11 @@ matrix:
     osx_image: xcode10.2
 
     before_install:
+      - python3 --version
+      - pip3 --version
+      - pip3 install virtualenv
+      - python3 -m venv venv
+      - source venv/bin/activate
       #- brew update
       #- brew install python3
       #- pyenv install 3.6.7
@@ -45,5 +50,5 @@ matrix:
       - brew install ffmpeg
 
     install:
-      - pip install codecov
-      - pip install -r requiremenets.txt
+      - pip3 install codecov
+      - pip3 install -r requiremenets.txt
