@@ -34,6 +34,6 @@ matrix:
   - os: osx
     before_install:
       - brew install ffmpeg
-      install:
+    install:
       - pip install codecov
       - pip install -r requiremenets.txt
