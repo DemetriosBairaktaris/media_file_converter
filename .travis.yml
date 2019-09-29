@@ -1,14 +1,9 @@
 
-language: python
-python:
-  - "3.6"
+
 
 sudo: required
-
-
 script:
   - pytest --cov src/ test/ --verbose --cov-report term-missing
-
 after_success:
   - codecov
 
@@ -16,8 +11,11 @@ after_success:
 matrix:
   include:
   - os: linux
+    language: python
+    python:
+      - "3.6"
     before_install:
-      - sudo apt-get install ffmpeg ; fi
+      - sudo apt-get install ffmpeg
       - sudo apt-get update
       - sudo apt-get install -y xvfb herbstluftwm
       - export DISPLAY=:99.0
@@ -32,8 +30,13 @@ matrix:
       - sleep 3
 
   - os: osx
+    language: sh
     before_install:
+      - brew install pyenv
+      - brew install pyenv
+      - pyenv install 3.6
       - brew install ffmpeg
+      - brew install python
     install:
       - pip install codecov
       - pip install -r requiremenets.txt
