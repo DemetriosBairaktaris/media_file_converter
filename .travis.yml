@@ -2,6 +2,9 @@
 
 
 sudo: required
+allow_failures:
+  - os: osx
+
 script:
   - pytest --cov src/ test/ --verbose --cov-report term-missing
 after_success:
