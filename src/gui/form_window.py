@@ -1,13 +1,18 @@
 import sys
 import os
-from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
-                             QDialogButtonBox, QFormLayout, QGroupBox,
-                             QLabel, QMenu, QPushButton,
-                             QVBoxLayout, QFileDialog, QMessageBox, QListWidget, QSystemTrayIcon)
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QHBoxLayout,
+                             QDialogButtonBox, QFormLayout, QGroupBox, QAbstractButton,
+                             QLabel, QPushButton,
+                             QVBoxLayout, QFileDialog, QMessageBox, QListWidget)
+
+from src.gui import widgets
+from PyQt5 import QtCore
+from PyQt5 import Qt
+from PyQt5.QtGui import QCursor
 
 from src.backend.backend import Jobs
 from src.gui.widgets import ExtendedQListWidgetItem
-from src.gui import icons
+from src.gui import icons, config, style
 
 
 def open_file_exporer(path):
@@ -38,40 +43,20 @@ def prompt_message_box(app,
     return box
 
 
+
 class Dialog(QDialog):
-    NumGridRows = 3
-    NumButtons = 4
 
     def __init__(self, conversion, test_mode=False, app=None, icon=None):
         super(Dialog, self).__init__()
-        if app:
-            self.app = app
-            # self.app.aboutToQuit.connect(self.closeEvent)
+        self.setStyleSheet(style.get_style_sheet())
 
-        if icon:
-            self.sti = QSystemTrayIcon()
-            self.sti.setIcon(icon)
-            self.menu = QMenu()
-            self.sti.show()
-
-        self.start_func = self.handle_start
         self.conversion = conversion
-        self.source_button = QPushButton('Select Source')
-        self.source_button.clicked.connect(self.openFileNameDialog)
+        self.source_button = widgets.create_button('Select Source')
+        self.source_button.clicked.connect(self.open_file_name_dialog)
 
         self.status_list = QListWidget()
         self.status_list.itemClicked.connect(self.item_clicked)
-        self.status_list.setStyleSheet(
-            '''QListWidget::item { 
-                      background-color:#efefef;
-                      margin: 5px;
-                      margin-bottom:0px; 
-                      padding: 3px;
-                      
-                  },
-                  QListWidget::item:pressed {
-                    background-color: #000000;
-            }''')
+        self.status_list.setStyleSheet(style.get_style_sheet())
 
         self.jobs = Jobs()
         self.jobs.observers.append(self)
@@ -88,14 +73,19 @@ class Dialog(QDialog):
             for t in conversion.get_supported_types():
                 self.dest_type_picker.addItem(t)
 
-        self.createFormGroupBox()
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        buttonBox.accepted.connect(self.start_func or (lambda *args: 0))
-        buttonBox.rejected.connect(self.close)
+        self.create_form_group_box()
+
+        self.convert_button = widgets.create_button('Start Converting')
+        self.convert_button.clicked.connect(self.handle_start)
+
+        self.cancel_button = widgets.create_button('Cancel')
+        self.cancel_button.clicked.connect(self.close)
+
+        buttonBox = widgets.create_button_layout([self.convert_button, self.cancel_button])
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(self.formGroupBox)
-        mainLayout.addWidget(buttonBox)
+        mainLayout.addLayout(buttonBox, stretch=False)
         self.setLayout(mainLayout)
         self.setWindowTitle("FILE CONVERTER")
 
@@ -106,6 +96,9 @@ class Dialog(QDialog):
     def handle_start(self, *args, **kwargs):
         selected_conversion_type = self.dest_type_picker.currentText()
         selected_source = self.get_selected_source()
+        if not selected_source:
+            prompt_message_box(self, 'Nothing Selected...', options=[], default_option=QMessageBox.Ok)
+            return
 
         thread = None
         params = (selected_source, selected_conversion_type)
@@ -134,12 +127,12 @@ class Dialog(QDialog):
     def set_selected_source(self, path):
         if path:
             self.selected_source.setText(path)
-            print(str(self.get_selected_source()))
+
 
     def get_selected_source(self):
         return self.selected_source.text()
 
-    def createFormGroupBox(self):
+    def create_form_group_box(self):
         self.formGroupBox = QGroupBox("Convert File")
         layout = QFormLayout()
         layout.addRow(QLabel("Source Path"), self.source_button)
@@ -149,14 +142,13 @@ class Dialog(QDialog):
         self.formGroupBox.setLayout(layout)
 
     def item_clicked(self, item, *args):
-        if self.jobs.get_job(item.id).is_done():
-            open_file_exporer(self.jobs[self.jobs.index_of_id(item.id)].get_dest_path())
+        job = self.jobs.get_job(item.id)
+        if job.is_done():
+            open_file_exporer(job.get_dest_path())
             self.status_list.takeItem(self.jobs.index_of_id(item.id))
             self.jobs.remove_job_by_id(item.id)
-        else:
-            print('Not done')
 
-    def openFileNameDialog(self):
+    def open_file_name_dialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
@@ -164,7 +156,6 @@ class Dialog(QDialog):
         self.set_selected_source(fileName)
 
     def closeEvent(self, QCloseEvent):
-
         self.jobs.stop_polling_for_jobs(wait=True)
 
 

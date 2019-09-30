@@ -1,38 +1,54 @@
 
-language: python
-python:
-  - "3.6"
+
 
 sudo: required
 
-os:
-  - linux
-  #- osx
-  #- windows
-
-
-# command to install dependencies
-before_install:
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install ffmpeg ; fi
-  - sudo apt-get update
-  - sudo apt-get install -y xvfb herbstluftwm
-  #- if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ffmpeg ; fi
-  #- if [ "$TRAVIS_OS_NAME" == "windows" ]; then choco install ffmpeg; fi
-
-install:
-  - pip install codecov
-  - pip install -r requirements.txt
-  - export DISPLAY=:99.0
-  - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX +render -noreset
-# command to run tests
-
-
-before_script:
-  - herbstluftwm &
-  - sleep 3
-
 script:
   - pytest --cov src/ test/ --verbose --cov-report term-missing
-
 after_success:
   - codecov
+
+
+matrix:
+  allow_failures:
+  - os: osx
+
+  include:
+  - os: linux
+    language: python
+    python:
+      - "3.6"
+    before_install:
+      - sudo apt-get install ffmpeg
+      - sudo apt-get update
+      - sudo apt-get install -y xvfb herbstluftwm
+      - export DISPLAY=:99.0
+      - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1920x1200x24 -ac +extension GLX +render -noreset
+
+    install:
+      - pip install codecov
+      - pip install -r requirements.txt
+
+    before_script:
+      - herbstluftwm &
+      - sleep 3
+
+  - os: osx
+    language: sh
+    osx_image: xcode10.2
+
+    before_install:
+      - python3 --version
+      - pip3 --version
+      - pip3 install virtualenv
+      #- brew update
+      #- brew install python3
+      #- pyenv install 3.6.7
+      #- pyenv local 3.6.7
+      - brew install ffmpeg
+
+    install:
+      - python3 -m venv venv
+      - source venv/bin/activate
+      - pip3 install codecov
+      - pip3 install -r requirements-test.txt

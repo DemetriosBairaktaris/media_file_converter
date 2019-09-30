@@ -9,7 +9,7 @@ def remove_file(path):
         os.remove(path)
         return True
     except Exception as e:
-        e = "Couln't remove file, {}".format(str(e))
+        e = "Couldn't remove file, {}".format(str(e))
         print(e)
         return False
 
@@ -102,7 +102,7 @@ class Jobs:
 
 class Conversion:
     def run(self, runnable, *args):
-        thread = Thread(target=runnable, args=args)
+        thread = CustomThread(target=runnable, args=args)
         thread.start()
         return thread
 
