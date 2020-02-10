@@ -4,8 +4,11 @@ from src import gui
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QSize
 
+
 class IconNames:
+
     CHECK_MARK = 'checkmark.svg'
+    WAV = 'wav.svg'
 
 
 def load_icon(icon_name):

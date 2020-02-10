@@ -13,6 +13,7 @@ from PyQt5.QtGui import QCursor
 from src.backend.backend import Jobs
 from src.gui.widgets import ExtendedQListWidgetItem
 from src.gui import icons, config, style
+from pathlib import Path
 
 
 def open_file_exporer(path):
@@ -49,7 +50,8 @@ class Dialog(QDialog):
     def __init__(self, conversion, test_mode=False, app=None, icon=None):
         super(Dialog, self).__init__()
         self.setStyleSheet(style.get_style_sheet())
-
+        self.showNormal()
+        self.setFixedSize(self.size())
         self.conversion = conversion
         self.source_button = widgets.create_button('Select Source')
         self.source_button.clicked.connect(self.open_file_name_dialog)
@@ -119,7 +121,7 @@ class Dialog(QDialog):
         if thread is not None:
             text = 'Currently converting ' + self.get_selected_source()
             src_path_without_ext, ext = os.path.splitext(self.get_selected_source())
-            dest_path = os.path.join(src_path_without_ext + '.' + selected_conversion_type)
+            dest_path = self.conversion.get_last_output_path(self.get_selected_source())
             self.jobs.add_job(thread, text, self.get_selected_source(), dest_path)
             item = ExtendedQListWidgetItem(self.jobs[-1].id, text)
             self.status_list.addItem(item)
@@ -127,7 +129,6 @@ class Dialog(QDialog):
     def set_selected_source(self, path):
         if path:
             self.selected_source.setText(path)
-
 
     def get_selected_source(self):
         return self.selected_source.text()
@@ -151,8 +152,8 @@ class Dialog(QDialog):
     def open_file_name_dialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
-                                                  "All Files (*);;Python Files (*.py)", options=options)
+        fileName, _ = QFileDialog.getOpenFileName(self, directory=str(Path.home()), caption="Select a File Location to Save To",
+                                                  filter="All Files (*);;Python Files (*.py)", options=options)
         self.set_selected_source(fileName)
 
     def closeEvent(self, QCloseEvent):
@@ -170,7 +171,7 @@ if __name__ == '__main__':
     app = ExtendedQApp(sys.argv)
     app.setQuitOnLastWindowClosed(True)
     dialog = Dialog(None, app=app, test_mode=True)
-    dialog.showFullScreen()
+    
     app.exec(dialog)
     app.instance().quit()
     pass

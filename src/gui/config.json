@@ -1,7 +1,7 @@
 {
-  "accent_color": "#456790",
+  "accent_color": "#003388",
   "main_font_color": "#000000",
-  "accent_font_color":"#3474eb",
-  "main_color": "#FFFFFF"
-
+  "accent_font_color": "#3474eb",
+  "main_color": "#FFFFFF",
+  "success_color": "#00D326"
 }

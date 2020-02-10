@@ -3,6 +3,7 @@ from threading import Thread
 import os
 from time import sleep
 
+IS_TEST = False
 
 def remove_file(path):
     try:
@@ -20,7 +21,7 @@ class CustomThread(Thread):
         super(CustomThread, self).__init__(*args, **kwargs)
         self.started = False
 
-    def start(self):
+    def custom_start(self):
         self.started = True
         super(CustomThread, self).start()
 
@@ -58,7 +59,7 @@ class Jobs:
         self.observers = []
         self.stop_poll_for_jobs = False
         self.t = CustomThread(target=self._poll_for_jobs)
-        self.t.start()
+        self.t.custom_start()
 
     def _poll_for_jobs(self):
         while not self.stop_poll_for_jobs:
@@ -66,7 +67,7 @@ class Jobs:
                 if j.is_done():
                     for o in self.observers:
                         o.notify(j)
-            sleep(.5)
+            sleep(.3)
 
     def stop_polling_for_jobs(self, wait=False):
         self.stop_poll_for_jobs = True
@@ -101,14 +102,31 @@ class Jobs:
 
 
 class Conversion:
+
+    def __init__(self):
+        self.output_paths = {}
+
+    def get_last_output_path(self, source):
+        return self.output_paths[source]
+
     def run(self, runnable, *args):
         thread = CustomThread(target=runnable, args=args)
-        thread.start()
+        thread.custom_start()
         return thread
 
+    def get_output_path(self, input_path, extension):
+        if IS_TEST:
+            from src.util import naming_utils
+            temp_name = naming_utils.get_temp_file_name(extension)
+            output_path = os.path.join(os.path.dirname(input_path), temp_name)
+        else:
+            input_path_no_ext, ext = os.path.splitext(input_path)
+            output_path = input_path_no_ext + ('.' if '.' not in extension else '') + extension
+        return output_path
+
     def convert(self, input_path, conversion_extension, check_file_path=True, do_multi_thread=True):
-        output_path, ext = os.path.splitext(input_path)
-        output_path += ('.' if '.' not in conversion_extension else '') + conversion_extension
+
+        output_path = self.get_output_path(input_path, conversion_extension)
         if check_file_path is True and os.path.exists(output_path):
             raise FileExistsError
         elif input_path == output_path:
@@ -120,6 +138,7 @@ class Conversion:
             inputs={input_path: None},
             outputs={output_path: None})
 
+        self.output_paths[input_path] = output_path
         if do_multi_thread:
             return self.run(ff.run)
         else:

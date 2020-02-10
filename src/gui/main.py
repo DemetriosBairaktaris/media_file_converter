@@ -15,7 +15,6 @@ def start_app():
 
 def main():
     app, dialog = start_app()
-    dialog.showFullScreen()
     app.exec(dialog)
     app.quitOnLastWindowClosed()
 

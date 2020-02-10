@@ -65,7 +65,7 @@ class TestJob:
         :return:
         """
         Fixtures.seconds = 30
-        job.thread.start()
+        job.thread.custom_start()
         assert 'dest' == job.get_dest_path()
         assert 'src' == job.get_src_path()
         assert not job.is_done()
@@ -76,7 +76,7 @@ class TestJob:
         :return:
         """
         Fixtures.seconds = 5
-        job.thread.start()
+        job.thread.custom_start()
         assert not job.is_done()
         sleep(6)
         assert job.is_done()
@@ -91,7 +91,7 @@ class TestJob:
         Fixtures.seconds = 2
         t = job.thread
         assert not job.is_done()
-        t.start()
+        t.custom_start()
         sleep(5)
         assert job.is_done()
 
@@ -129,7 +129,7 @@ class TestJobs:
         with Contexts.JobsContext() as jobs:
             for job in list_of_jobs:
                 jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-                job.thread.start()
+                job.thread.custom_start()
 
             for job in jobs:
                 assert not job.is_done()
@@ -161,7 +161,7 @@ class TestJobs:
 
             jobs.observers.append(o)
             jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-            job.thread.start()
+            job.thread.custom_start()
             sleep(6)
             assert o.notified
 
@@ -169,7 +169,7 @@ class TestJobs:
         Fixtures.seconds = 5
         with Contexts.JobsContext() as jobs:
             jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-            job.thread.start()
+            job.thread.custom_start()
             assert 0 == jobs.index_of_id(job.id)
 
 
