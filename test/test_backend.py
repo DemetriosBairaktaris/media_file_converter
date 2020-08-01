@@ -96,7 +96,6 @@ class TestJob:
         assert job.is_done()
 
 
-
 class TestJobs:
 
     def test_index(self, job):
@@ -217,33 +216,4 @@ def test_remove_file_not_exists():
     """try to remove a file that does not exist, and it should not throw a exception"""
     assert not os.path.exists('/c/d/e/r/f/d/d/e/3')
     assert not backend.remove_file('/c/d/e/r/f/d/d/e/3')
-
-
-def test_extended_widget_list_item():
-    """Tests how the widget list item's state should be"""
-    assert widgets.ExtendedQListWidgetItem('id').id == 'id'
-
-
-def test_extended_widget_list_item_original_text():
-    assert widgets.ExtendedQListWidgetItem('id', 'text').original_text == 'text'
-
-
-def test_extended_widget_list_item_original_text_changed():
-    e = widgets.ExtendedQListWidgetItem('id', 'text')
-    e.set_done(True)
-    assert e.text().lower().endswith('done')
-
-
-def test_extended_widget_list_item_original_text_changed_x_times():
-    e = widgets.ExtendedQListWidgetItem('id', 'text')
-    e.set_done(True)
-    e.set_done(True)
-    e.set_done(True)
-    assert e.text().lower().endswith('done')
-    assert e.text().lower().count('done') == 1
-
-
-def test_extended_widget_list_item_set_icon():
-    e = widgets.ExtendedQListWidgetItem('id', 'text', icon=(icons.load_icon(icons.IconNames.CHECK_MARK)))
-    assert e.icon()
 

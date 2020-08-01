@@ -1,6 +1,7 @@
-from src import gui
 import os
 import json
+
+from src import gui
 
 
 def load_gui_config():

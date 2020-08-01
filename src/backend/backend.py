@@ -62,10 +62,11 @@ class Jobs:
 
     def _poll_for_jobs(self):
         while not self.stop_poll_for_jobs:
-            for j in self.jobs:
+            for j in self.jobs[:]:
                 if j.is_done():
                     for o in self.observers:
-                        o.notify(j)
+                        if o.notify(j):
+                            self.jobs.remove(j)
             sleep(.5)
 
     def stop_polling_for_jobs(self, wait=False):
@@ -126,7 +127,8 @@ class Conversion:
             ff.run()
         pass
 
-    def get_supported_types(self):
+    @staticmethod
+    def get_supported_types():
         return sorted([
             'AIFF',
             'ASF',
