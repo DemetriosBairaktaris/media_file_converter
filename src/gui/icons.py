@@ -1,4 +1,5 @@
 import os
+import sys
 from src import gui
 
 from PySide2.QtGui import QIcon, QMovie
@@ -38,6 +39,15 @@ def load_gif(gif_name):
 
 def get_icon_dir_path(suffix):
     path = os.path.dirname(os.path.abspath(gui.__file__))
+    if getattr(sys, 'frozen', False):
+        path = get_mac_bundle_resources_path()
+
     path = os.path.join(path, 'icons_' + suffix)
 
+    return path
+
+
+def get_mac_bundle_resources_path():
+    path = os.path.dirname(sys._MEIPASS)
+    path = os.path.join(path, 'Resources')
     return path

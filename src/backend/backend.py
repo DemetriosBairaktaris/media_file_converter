@@ -1,5 +1,6 @@
 import ffmpy
 from threading import Thread
+import sys
 import os
 from time import sleep
 
@@ -117,7 +118,11 @@ class Conversion:
         else:
             remove_file(output_path)
 
+        executable = 'ffmpeg'
+        if getattr(sys, 'freeze', False):
+            executable = os.path.join(sys._MEIPASS, executable)
         ff = ffmpy.FFmpeg(
+            executable=executable,
             inputs={input_path: None},
             outputs={output_path: None})
 

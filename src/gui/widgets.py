@@ -41,6 +41,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 
 
 class JobWidget(QWidget, object):
+
     set_done_appearence_signal = QtCore.Signal()
 
     def __init__(self, id, src_file, dest_file, done=False):
@@ -62,7 +63,6 @@ class JobWidget(QWidget, object):
         self.widget_layout.addWidget(QLabel(self.dest_file))
 
         self.setLayout(self.widget_layout)
-
         self.set_done_appearence_signal.connect(self.set_done_appearence)
 
         self.show()
@@ -70,7 +70,6 @@ class JobWidget(QWidget, object):
     def open(self, *args, **kwargs):
         utils.open_file_exporer(self.dest_file)
         self.hide()
-        self.parent().hide()
         self.destroy()
 
     def set_done(self, done):
