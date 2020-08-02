@@ -1,9 +1,9 @@
 import ffmpy
 from threading import Thread
+import sys
 import os
 from time import sleep
 
-IS_TEST = False
 
 def remove_file(path):
     try:
@@ -21,7 +21,7 @@ class CustomThread(Thread):
         super(CustomThread, self).__init__(*args, **kwargs)
         self.started = False
 
-    def custom_start(self):
+    def start(self):
         self.started = True
         super(CustomThread, self).start()
 
@@ -59,15 +59,16 @@ class Jobs:
         self.observers = []
         self.stop_poll_for_jobs = False
         self.t = CustomThread(target=self._poll_for_jobs)
-        self.t.custom_start()
+        self.t.start()
 
     def _poll_for_jobs(self):
         while not self.stop_poll_for_jobs:
-            for j in self.jobs:
+            for j in self.jobs[:]:
                 if j.is_done():
                     for o in self.observers:
-                        o.notify(j)
-            sleep(.3)
+                        if o.notify(j):
+                            self.jobs.remove(j)
+            sleep(.5)
 
     def stop_polling_for_jobs(self, wait=False):
         self.stop_poll_for_jobs = True
@@ -102,31 +103,14 @@ class Jobs:
 
 
 class Conversion:
-
-    def __init__(self):
-        self.output_paths = {}
-
-    def get_last_output_path(self, source):
-        return self.output_paths[source]
-
     def run(self, runnable, *args):
         thread = CustomThread(target=runnable, args=args)
-        thread.custom_start()
+        thread.start()
         return thread
 
-    def get_output_path(self, input_path, extension):
-        if IS_TEST:
-            from src.util import naming_utils
-            temp_name = naming_utils.get_temp_file_name(extension)
-            output_path = os.path.join(os.path.dirname(input_path), temp_name)
-        else:
-            input_path_no_ext, ext = os.path.splitext(input_path)
-            output_path = input_path_no_ext + ('.' if '.' not in extension else '') + extension
-        return output_path
-
     def convert(self, input_path, conversion_extension, check_file_path=True, do_multi_thread=True):
-
-        output_path = self.get_output_path(input_path, conversion_extension)
+        output_path, ext = os.path.splitext(input_path)
+        output_path += ('.' if '.' not in conversion_extension else '') + conversion_extension
         if check_file_path is True and os.path.exists(output_path):
             raise FileExistsError
         elif input_path == output_path:
@@ -134,18 +118,22 @@ class Conversion:
         else:
             remove_file(output_path)
 
+        executable = 'ffmpeg'
+        if getattr(sys, 'freeze', False):
+            executable = os.path.join(sys._MEIPASS, executable)
         ff = ffmpy.FFmpeg(
+            executable=executable,
             inputs={input_path: None},
             outputs={output_path: None})
 
-        self.output_paths[input_path] = output_path
         if do_multi_thread:
             return self.run(ff.run)
         else:
             ff.run()
         pass
 
-    def get_supported_types(self):
+    @staticmethod
+    def get_supported_types():
         return sorted([
             'AIFF',
             'ASF',

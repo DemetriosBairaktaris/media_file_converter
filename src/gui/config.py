@@ -1,12 +1,13 @@
-from src import gui
-import os
-import json
-
 
 def load_gui_config():
-    path = os.path.dirname(os.path.abspath(gui.__file__))
-    path = os.path.join(path, 'config.json')
-    return json.load(open(path))
+    return {
+        "accent_color": "#113366",
+        "main_font_color": "#000000",
+        "accent_font_color": "#3474eb",
+        "main_color": "#EEEEEE",
+        "button_hover_color": "#555"
+
+    }
 
 
 

@@ -65,7 +65,7 @@ class TestJob:
         :return:
         """
         Fixtures.seconds = 30
-        job.thread.custom_start()
+        job.thread.start()
         assert 'dest' == job.get_dest_path()
         assert 'src' == job.get_src_path()
         assert not job.is_done()
@@ -76,7 +76,7 @@ class TestJob:
         :return:
         """
         Fixtures.seconds = 5
-        job.thread.custom_start()
+        job.thread.start()
         assert not job.is_done()
         sleep(6)
         assert job.is_done()
@@ -91,10 +91,9 @@ class TestJob:
         Fixtures.seconds = 2
         t = job.thread
         assert not job.is_done()
-        t.custom_start()
+        t.start()
         sleep(5)
         assert job.is_done()
-
 
 
 class TestJobs:
@@ -129,7 +128,7 @@ class TestJobs:
         with Contexts.JobsContext() as jobs:
             for job in list_of_jobs:
                 jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-                job.thread.custom_start()
+                job.thread.start()
 
             for job in jobs:
                 assert not job.is_done()
@@ -161,7 +160,7 @@ class TestJobs:
 
             jobs.observers.append(o)
             jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-            job.thread.custom_start()
+            job.thread.start()
             sleep(6)
             assert o.notified
 
@@ -169,7 +168,7 @@ class TestJobs:
         Fixtures.seconds = 5
         with Contexts.JobsContext() as jobs:
             jobs.add_job(job.thread, job.name, job.src_path, job.dest_path)
-            job.thread.custom_start()
+            job.thread.start()
             assert 0 == jobs.index_of_id(job.id)
 
 
@@ -217,33 +216,4 @@ def test_remove_file_not_exists():
     """try to remove a file that does not exist, and it should not throw a exception"""
     assert not os.path.exists('/c/d/e/r/f/d/d/e/3')
     assert not backend.remove_file('/c/d/e/r/f/d/d/e/3')
-
-
-def test_extended_widget_list_item():
-    """Tests how the widget list item's state should be"""
-    assert widgets.ExtendedQListWidgetItem('id').id == 'id'
-
-
-def test_extended_widget_list_item_original_text():
-    assert widgets.ExtendedQListWidgetItem('id', 'text').original_text == 'text'
-
-
-def test_extended_widget_list_item_original_text_changed():
-    e = widgets.ExtendedQListWidgetItem('id', 'text')
-    e.set_done(True)
-    assert e.text().lower().endswith('done')
-
-
-def test_extended_widget_list_item_original_text_changed_x_times():
-    e = widgets.ExtendedQListWidgetItem('id', 'text')
-    e.set_done(True)
-    e.set_done(True)
-    e.set_done(True)
-    assert e.text().lower().endswith('done')
-    assert e.text().lower().count('done') == 1
-
-
-def test_extended_widget_list_item_set_icon():
-    e = widgets.ExtendedQListWidgetItem('id', 'text', icon=(icons.load_icon(icons.IconNames.CHECK_MARK)))
-    assert e.icon()
 

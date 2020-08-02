@@ -1,73 +1,59 @@
-import sys
 import os
-from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog, QHBoxLayout,
-                             QDialogButtonBox, QFormLayout, QGroupBox, QAbstractButton,
-                             QLabel, QPushButton,
-                             QVBoxLayout, QFileDialog, QMessageBox, QListWidget)
 
-from src.gui import widgets
-from PyQt5 import QtCore
-from PyQt5 import Qt
-from PyQt5.QtGui import QCursor
+from PySide2 import QtWidgets
+from PySide2 import QtCore
+from PySide2.QtWidgets import (QApplication, QComboBox, QDialog, QScrollArea,
+                               QFormLayout, QGroupBox, QDesktopWidget, QLabel,
+                               QVBoxLayout, QFileDialog, QMessageBox, QListWidget, QListWidgetItem)
 
 from src.backend.backend import Jobs
-from src.gui.widgets import ExtendedQListWidgetItem
-from src.gui import icons, config, style
-from pathlib import Path
+from src.gui import icons, style, utils
+from src.gui import widgets
 
 
-def open_file_exporer(path):
+class SystemTrayIcon(QtWidgets.QSystemTrayIcon):
 
-    if sys.platform == 'darwin':
-        cmd = 'open -R'
-    elif sys.platform == 'win32':
-        cmd = 'explorer.exe'
-    else:
-        # TODO
-        pass
-    os.system('{} {}'.format(cmd, path))
+    def __init__(self, parent=None):
+        self.icon = icons.load_icon('icon.svg')
+        QtWidgets.QSystemTrayIcon.__init__(self, self.icon, parent)
+        self.parent: QDialog = parent
+        self.activated.connect(self.on_click)
 
-
-def prompt_message_box(app,
-                       info,
-                       options=(QMessageBox.Yes, QMessageBox.No),
-                       default_option=QMessageBox.No):
-    if options:
-        option = options[0]
-        for o in options[1:]:
-            option = option | o
-    else:
-        option = default_option
-
-    box = QMessageBox.question(app, 'Error', info,
-                               option, default_option)
-    return box
-
+    def on_click(self, *args, **kwargs):
+        if self.parent.isVisible():
+            self.parent.hide()
+        else:
+            self.parent.show()
+            self.parent.topLevelWidget()
 
 
 class Dialog(QDialog):
 
-    def __init__(self, conversion, test_mode=False, app=None, icon=None):
+    def __init__(self, conversion, test_mode=False):
         super(Dialog, self).__init__()
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.setStyleSheet(style.get_style_sheet())
-        self.showNormal()
-        self.setFixedSize(self.size())
-        self.conversion = conversion
-        self.source_button = widgets.create_button('Select Source')
-        self.source_button.clicked.connect(self.open_file_name_dialog)
 
-        self.status_list = QListWidget()
-        self.status_list.itemClicked.connect(self.item_clicked)
-        self.status_list.setStyleSheet(style.get_style_sheet())
+        self.conversion = conversion
+        self.source_button = widgets.create_button('Select Source', event=self.open_file_name_dialog)
+
+        self.status_list = QGroupBox()
+        self.status_list_layout = QVBoxLayout()
+        self.status_list.setLayout(self.status_list_layout)
 
         self.jobs = Jobs()
         self.jobs.observers.append(self)
         self.selected_source = QLabel('')
         self.dest_type_picker = QComboBox()
+        self.job_widgets: dict = {}
 
         if test_mode:
-            for i in range(10):
-                self.status_list.addItem(ExtendedQListWidgetItem(123, 'Text', icon=icons.load_icon(icons.IconNames.CHECK_MARK)))
+            for i in range(400):
+                item = widgets.JobWidget(123,
+                                               'Text.mp4',
+                                               'Text.mp3')
+                self.status_list_layout.addWidget(item)
+
         if not test_mode and conversion is None:
             raise Exception('Conversion backend not found')
 
@@ -75,14 +61,11 @@ class Dialog(QDialog):
             for t in conversion.get_supported_types():
                 self.dest_type_picker.addItem(t)
 
+
         self.create_form_group_box()
 
-        self.convert_button = widgets.create_button('Start Converting')
-        self.convert_button.clicked.connect(self.handle_start)
-
-        self.cancel_button = widgets.create_button('Cancel')
-        self.cancel_button.clicked.connect(self.close)
-
+        self.convert_button = widgets.create_button('Start Converting', event=self.handle_start)
+        self.cancel_button = widgets.create_button('Exit', event=self.close_app)
         buttonBox = widgets.create_button_layout([self.convert_button, self.cancel_button])
 
         mainLayout = QVBoxLayout()
@@ -91,15 +74,22 @@ class Dialog(QDialog):
         self.setLayout(mainLayout)
         self.setWindowTitle("FILE CONVERTER")
 
-    def notify(self, job, *args, **kwargs):
-        index = self.jobs.index_of_id(job.id)
-        self.status_list.item(index).set_done(True)
+    def notify(self, job, *args, **kwargs) -> bool:
+        if job.id not in self.job_widgets:
+            return False
+        widget: widgets.JobWidget = self.job_widgets[job.id]
+        widget.set_done(True)
+        del self.job_widgets[job.id]
+        return True
+
+    def close_app(self, *args, **kwargs):
+        self.close()
 
     def handle_start(self, *args, **kwargs):
         selected_conversion_type = self.dest_type_picker.currentText()
         selected_source = self.get_selected_source()
         if not selected_source:
-            prompt_message_box(self, 'Nothing Selected...', options=[], default_option=QMessageBox.Ok)
+            utils.prompt_message_box(self, 'Nothing Selected...', options=[], default_option=QMessageBox.Ok)
             return
 
         thread = None
@@ -109,22 +99,24 @@ class Dialog(QDialog):
         try:
             thread = convert(*params, **kwparams)
         except FileExistsError:
-            if prompt_message_box(self, 'File already exists...do you want to overwrite?') == QMessageBox.Yes:
+            if utils.prompt_message_box(self, 'File already exists...do you want to overwrite?') == QMessageBox.Yes:
                 try:
                     kwparams['check_file_path'] = False
                     thread = convert(*params, **kwparams)
                 except FileExistsError:
-                    prompt_message_box(self, 'Destination and Source are the same...no need to convert',
-                                       options=[], default_option=QMessageBox.Ok)
+                    utils.prompt_message_box(self, 'Destination and Source are the same...no need to convert',
+                                             options=[], default_option=QMessageBox.Ok)
                     thread = None
 
         if thread is not None:
             text = 'Currently converting ' + self.get_selected_source()
             src_path_without_ext, ext = os.path.splitext(self.get_selected_source())
-            dest_path = self.conversion.get_last_output_path(self.get_selected_source())
+            dest_path = os.path.join(src_path_without_ext + '.' + selected_conversion_type)
             self.jobs.add_job(thread, text, self.get_selected_source(), dest_path)
-            item = ExtendedQListWidgetItem(self.jobs[-1].id, text)
-            self.status_list.addItem(item)
+            job_id = self.jobs[-1].id
+            item = widgets.JobWidget(job_id, text, dest_path)
+            self.status_list_layout.addWidget(item)
+            self.job_widgets[job_id] = item
 
     def set_selected_source(self, path):
         if path:
@@ -132,6 +124,12 @@ class Dialog(QDialog):
 
     def get_selected_source(self):
         return self.selected_source.text()
+
+    def move_top_left(self):
+        qtRectangle = self.frameGeometry()
+        centerPoint = QDesktopWidget().availableGeometry().center()
+        qtRectangle.moveCenter(centerPoint)
+        self.move(qtRectangle.topLeft())
 
     def create_form_group_box(self):
         self.formGroupBox = QGroupBox("Convert File")
@@ -142,18 +140,11 @@ class Dialog(QDialog):
         layout.addRow(self.status_list)
         self.formGroupBox.setLayout(layout)
 
-    def item_clicked(self, item, *args):
-        job = self.jobs.get_job(item.id)
-        if job.is_done():
-            open_file_exporer(job.get_dest_path())
-            self.status_list.takeItem(self.jobs.index_of_id(item.id))
-            self.jobs.remove_job_by_id(item.id)
-
-    def open_file_name_dialog(self):
+    def open_file_name_dialog(self, *args, **kwargs):
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self, directory=str(Path.home()), caption="Select a File Location to Save To",
-                                                  filter="All Files (*);;Python Files (*.py)", options=options)
+        # options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", "",
+                                                  "All Files (*);;Python Files (*.py)", options=options)
         self.set_selected_source(fileName)
 
     def closeEvent(self, QCloseEvent):
@@ -161,17 +152,7 @@ class Dialog(QDialog):
 
 
 class ExtendedQApp(QApplication):
-    def exec(self, dialog):
-        dialog.exec()
-        dialog.close()
+
+    def __init__(self):
+        super(ExtendedQApp, self).__init__([])
         pass
-
-
-if __name__ == '__main__':
-    app = ExtendedQApp(sys.argv)
-    app.setQuitOnLastWindowClosed(True)
-    dialog = Dialog(None, app=app, test_mode=True)
-    
-    app.exec(dialog)
-    app.instance().quit()
-    pass
