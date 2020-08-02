@@ -2,3 +2,8 @@
 **/*.pyc
 **/*.xml
 */.idea
+build/*
+dist/*
+venv/*
+.DS_Store
+.coverage
